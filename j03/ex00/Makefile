@@ -2,10 +2,10 @@
 ###############################################################################
 # Exec name
 
-NAME = ft_graphics
+NAME = ft_Graphics
 
 # srcs
-SOURCES = ft_graphics.ml
+SOURCES = *.ml
 
 # Compiler
 CAMLC = ocamlc
@@ -65,7 +65,7 @@ $(NAME).opt:	$(OPTOBJS)
 
 clean:
 	rm -f *.cm[iox] *~ .*~ #*#
-	rm -f $(NAME).o
+	rm -f *.o
 
 fclean: clean
 	rm -f $(NAME)

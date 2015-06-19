@@ -6,7 +6,6 @@ NAME = ft_Gardening
 
 # srcs
 SOURCES = *.ml
-
 # Compiler
 CAMLC = ocamlc
 CAMLOPT = ocamlopt
@@ -65,7 +64,7 @@ $(NAME).opt:	$(OPTOBJS)
 
 clean:
 	rm -f *.cm[iox] *~ .*~ #*#
-	rm -f $(NAME).o
+	rm -f *.o
 
 fclean: clean
 	rm -f $(NAME)

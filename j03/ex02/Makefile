@@ -5,7 +5,9 @@
 NAME = ft_Cipher
 
 # srcs
-SOURCES = *.ml
+SOURCES = cipher.ml \
+			uncipher.ml \
+			main.ml
 
 # Compiler
 CAMLC = ocamlc
@@ -65,7 +67,7 @@ $(NAME).opt:	$(OPTOBJS)
 
 clean:
 	rm -f *.cm[iox] *~ .*~ #*#
-	rm -f $(NAME).o
+	rm -f *.o
 
 fclean: clean
 	rm -f $(NAME)
