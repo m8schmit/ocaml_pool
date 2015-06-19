@@ -49,24 +49,26 @@ let rec uncaesar n s =
 
 	let ft_string_all func str key =
 	let len = ((String.length str) - 1) in
-		let rec loop func current_len =
-			if current_len > 0 then
+		let rec loop r current_len =
+			if current_len >= 0 then
 			begin
-				func (String.get str current_len);
-				loop func (current_len - 1)
+                loop (r ^ func (String.get str current_len) key) (current_len - 1)
 			end
 			else
-				func (String.get str current_len)
+				r
 		in
-		loop func len
+		loop "" len
+
+let xor_ing c key =
+    Char.escaped (char_of_int((int_of_char c) lxor key))
+
+let xor s key =
+	if key > 0 then
+		ft_string_all xor_ing s key
+	else
+		s
 
 
-	let xor_ing s n =
-	let rec xor s key =
-		if key > 0 then
-			let s = ft_string_all xor_ing s
-		else
-			s
 let main () =
 	let s = rot42 "abcdefghijklmnopqrstuvwxyz" in print_endline s;
 	let s2 = rot42 "abcdefghijklmnopqrstuvwxyz" in print_endline s2;
@@ -82,7 +84,9 @@ let main () =
 	let sb = unrot42 s4 in print_endline sb;
 	let sc = unrot42 s5 in print_endline sc;
 	let sd = unrot42 s6 in print_endline sd;
-	let se = unrot42 s7 in print_endline se
+    let se = unrot42 s7 in print_endline se;
+
+    let x = xor "alex" 2 in print_endline x
 
 
 let () = main ()
