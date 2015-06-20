@@ -13,23 +13,48 @@ let toString symbol = match symbol with
 	|T -> "X"
 	|Q -> "Draw"
 
-let rec draw_content content = match content with
+let rec draw_content content x y = match content with
 	|[] -> ()
-	|t :: q -> print_string (toString t ^ " ");
-				draw_content q
+	|t1 :: t2:: t3 :: q -> Graphics.moveto x y;
+			Graphics.draw_string ((toString t1) ^ "       " ^ (toString t2) ^ "       " ^ (toString t3));
+			draw_content q x (y - 50)
+	|_ -> ()
 
-let draw_player status =
-	print_endline (toString status)
+let draw_player status x y = match status with
+	| T -> Graphics.moveto (x + 10) (y + 10) ;
+		Graphics.lineto (x + 190) (y + 190);
+		Graphics.moveto (x + 10) (y + 190);
+		Graphics.lineto (x + 190) (y + 10);
+	|D -> Graphics.draw_circle (x + 100) (y + 100) 80 
+	|_ -> ()
 
-let drawSmallGrid grid = match grid.status with
-	| U -> draw_content grid.content
-	| _ -> draw_player grid.status
+let drawSmallGrid grid x y = match grid.status with
+	| U -> draw_content grid.content (x + 50) (y + 150)
+	| _ -> draw_player grid.status x y
 
-let rec drawBigGrid (grid:tbigGrid) = match grid with
-	|[] -> ()
-	|t::q -> drawSmallGrid t;
-			print_endline "|";
-			drawBigGrid q
+let draw_sep () =
+	Graphics.moveto 200 0;
+	Graphics.lineto 200 600;
+	Graphics.moveto 400 0;
+	Graphics.lineto 400 600;
+	Graphics.moveto 0 200;
+	Graphics.lineto 600 200;
+	Graphics.moveto 0 400;
+	Graphics.lineto 600 400
+
+let drawBigGrid (grid:tbigGrid) = 
+	let rec drawCase g x y=
+		match g with
+		|[] -> ()
+		|t::q -> drawSmallGrid t x y ;
+			match x with
+			|400 -> drawCase q 0 (y - 200)
+			|_ -> drawCase q (x + 200) y
+	in
+	Graphics.open_graph " 600x600"; 
+	drawCase grid 0 400;
+	draw_sep ()
+
 
 let rec cellIsFull grid = match grid.content with
 	|[] -> true
@@ -91,23 +116,60 @@ let rec modifBigGrid grid n m (v:tcontent) = match (grid, n) with
 
 let is_digit c = c >= '1' && c <= '9'
 
+let translate2 c a b = match (a, b) with
+	|(e, d) when e = (int_of_char '3') -> (c, char_of_int (6 + d))
+	|(e, d) when d = (int_of_char '3') && e = (int_of_char '2') -> (c, '6')
+	|(e, d) when d = (int_of_char '3') && e = (int_of_char '1') -> (c, '3')
+	|(e, d) -> (c, char_of_int ((e - 1) mod 3 * 3 + d))
+
+let translate a b = match (a, b) with
+	|(c, d) when (is_digit c) && (is_digit d) && c <= '3' && d <= '3'-> translate2 '1' (int_of_char c) (int_of_char d)
+	|(c, d) when (is_digit c) && (is_digit d) && c <= '3' && d <= '6'-> translate2 '2' (int_of_char c) (int_of_char d - 3)
+	|(c, d) when (is_digit c) && (is_digit d) && c <= '6' && d <= '3'-> translate2 '4' (int_of_char c - 3) (int_of_char d)
+	|(c, d) when (is_digit c) && (is_digit d) && c <= '6' && d <= '6'-> translate2 '5' (int_of_char c - 3) (int_of_char d - 3)
+	|(c, d) when (is_digit c) && (is_digit d) && c <= '3' && d <= '9'-> translate2 '3' (int_of_char c) (int_of_char d - 6)
+	|(c, d) when (is_digit c) && (is_digit d) && c <= '9' && d <= '3'-> translate2 '7' (int_of_char c - 6) (int_of_char d)
+	|(c, d) when (is_digit c) && (is_digit d) && c <= '9' && d <= '6'-> translate2 '8' (int_of_char c - 6) (int_of_char d - 3)
+	|(c, d) when (is_digit c) && (is_digit d) && c <= '6' && d <= '9'-> translate2 '6' (int_of_char c - 3) (int_of_char d - 6)
+	|(c, d) when (is_digit c) && (is_digit d) && c <= '9' && d <= '9'-> translate2 '9' (int_of_char c - 6) (int_of_char d - 6)
+	|_ -> (a, b)
+
+let rec is_space str = match String.length str with
+	|0 -> true
+	|n when str.[0] = ' ' -> is_space (String.sub str 1 (n - 1))
+	|_ -> false
+
+let check str =
+	(is_digit str.[0]) && (is_digit str.[(String.length str) - 1]) && (is_space (String.sub str 1 ((String.length str) - 2)))
+
 let rec getMove player grid =
 	drawBigGrid grid;
 	print_endline ("It's " ^ player.name ^ "'s turn.");
 	print_endline "Where do you want to play ?";
 	let buf = read_line () in 
 	let buff = match buf with
-		|"" ->"Bordel de merde t'es oblige de mettre une ligne vide du con ?"
+		|"" -> "Bordel de merde t'es oblige de mettre une ligne vide du con ?"
+		|c when String.length c <= 2 -> "Bordel de merde t'es oblige de mettre une ligne vide du con ?"
 		|_-> String.trim (buf)
 	in
+	if check buff then
+	begin
 	let a = buff.[0] and b = buff.[String.length buff - 1] 
-	in match (a, b) with
-	|(d, c) when is_digit d && is_digit c && (getCase (getSmallGrid grid (int_of_char d - 48)) (int_of_char c - 48)) = U && (getSmallGrid grid (int_of_char d - 48)).status = U -> ((int_of_char d) - 48, (int_of_char c) - 48)
+	in 
+	let tupple = translate a b in 
+	match tupple with
+	|(d, c) when is_digit d && is_digit c && (getCase (getSmallGrid grid (int_of_char d - 48)) (int_of_char c - 48)) = U && (getSmallGrid grid (int_of_char d - 48)).status = U -> 	((int_of_char d) - 48, (int_of_char c) - 48)
 	|(d, c) when is_digit d && is_digit c -> print_endline "A player already played here !";
 							getMove player grid
-	|_-> print_endline "Wrong format, please enter two correct digit";
+	|(d, c)->print_endline "Wrong format, please enter two correct digit";
 		getMove player grid
-
+end
+else
+	begin
+		print_endline "Wrong format, please enter two correct digit";
+		getMove player grid
+	end
+	
 
 let getInfoPlayer symbol=
 	print_endline ("Please enter the name for player" ^ toString symbol);
@@ -117,7 +179,10 @@ let rec launchGame playerA playerB grid=
 	let (a, b) = getMove playerA grid in
 	let cur_grid = modifBigGrid grid a b playerA.symbol in
 	if winBigGrid cur_grid <> U then
+	begin
+		drawBigGrid cur_grid;
 		winBigGrid cur_grid
+	end
 	else
 		launchGame playerB playerA cur_grid
 		
@@ -132,13 +197,18 @@ let rec main ?(r=false) () =
 		|(1, true) -> launchGame player2 player1 initGrid
 		|(_, _) -> launchGame player1 player2 initGrid 
 	in
-	let winner = oneGame rand in match winner with
-		| Q -> print_endline "It's a draw !"
-		| D -> print_endline ( player1.name ^ "is the winner ! Congratulations.");
-		| _ -> print_endline ( player2.name ^ "is the winner ! Congratulations.");
+	let winner = (oneGame rand)
+	in
+	if winner = Q then
+		print_endline "It's a draw !"
+	else if winner = D then
+	 	print_endline (player1.name ^ " is the winner ! Congratulations.")
+	else
+		print_endline (player2.name ^ " is the winner ! Congratulations.");
 	print_endline "Do you wish to play again ? Enter 'y' for yes, anything else for no";
 	let buff = String.trim (read_line ()) in match buff with
-	| "y" -> main () 
+	| "y" -> Graphics.clear_graph ();
+			main () 
 	| _ -> ()
 
 

@@ -6,8 +6,8 @@ type tsmallgrid = {content:tcontent list; status: tcontent}
 
 type tbigGrid = tsmallgrid list
 
-val drawSmallGrid : tsmallgrid -> unit
-val drawBigGrid : tbigGrid ->unit
+val drawSmallGrid : tsmallgrid -> int -> int ->unit
+val drawBigGrid : tbigGrid -> unit
 
 val winBigGrid: tbigGrid -> tcontent
 
