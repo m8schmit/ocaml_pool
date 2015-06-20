@@ -8,31 +8,50 @@ type tbigGrid = tsmallgrid list
 
 
 let toString symbol = match symbol with
+	|U -> Graphics.set_color (Graphics.rgb 25 25 25); Graphics.draw_string "-"
+	|D -> Graphics.set_color (Graphics.rgb 0 120 215);Graphics.set_text_size 5; Graphics.draw_string "O"
+	|T -> Graphics.set_color (Graphics.rgb 255 0 0);Graphics.set_text_size 5; Graphics.draw_string "X"
+	|Q -> Graphics.set_color (Graphics.rgb 255 0 255); Graphics.draw_string "draw"
+
+let toStringB symbol = match symbol with
 	|U -> "-"
-	|D -> "O"
-	|T -> "X"
+	|D -> "\x1B[34mO\x1B[0m"
+	|T -> "\x1B[31mX\x1B[0m"
 	|Q -> "Draw"
 
 let rec draw_content content x y = match content with
 	|[] -> ()
 	|t1 :: t2:: t3 :: q -> Graphics.moveto x y;
-			Graphics.draw_string ((toString t1) ^ "       " ^ (toString t2) ^ "       " ^ (toString t3));
+			toString t1;
+			Graphics.draw_string "       ";
+			toString t2;
+			Graphics.draw_string "       ";
+			toString t3;
 			draw_content q x (y - 50)
 	|_ -> ()
 
 let draw_player status x y = match status with
-	| T -> Graphics.moveto (x + 10) (y + 10) ;
+	| T -> 
+		Graphics.set_color (Graphics.rgb 255 0 0);
+		Graphics.moveto (x + 10) (y + 10);
 		Graphics.lineto (x + 190) (y + 190);
 		Graphics.moveto (x + 10) (y + 190);
 		Graphics.lineto (x + 190) (y + 10);
-	|D -> Graphics.draw_circle (x + 100) (y + 100) 80 
+	|D -> 
+		Graphics.set_color (Graphics.rgb 0 120 215);
+		Graphics.fill_circle (x + 100) (y + 100) 80;
 	|_ -> ()
 
 let drawSmallGrid grid x y = match grid.status with
-	| U -> draw_content grid.content (x + 50) (y + 150)
-	| _ -> draw_player grid.status x y
+	| U -> 	Graphics.set_color (Graphics.rgb 0 0 255);
+		 	Graphics.set_line_width 5;
+		 	draw_content grid.content (x + 50) (y + 150);
+	| _ -> draw_player grid.status x y; Graphics.set_color (Graphics.rgb 0 0 0)
 
 let draw_sep () =
+	(*Graphics.background;*)
+	Graphics.set_color (Graphics.rgb 155 167 255);
+	Graphics.set_line_width 5;
 	Graphics.moveto 200 0;
 	Graphics.lineto 200 600;
 	Graphics.moveto 400 0;
@@ -40,7 +59,8 @@ let draw_sep () =
 	Graphics.moveto 0 200;
 	Graphics.lineto 600 200;
 	Graphics.moveto 0 400;
-	Graphics.lineto 600 400
+	Graphics.lineto 600 400;
+	Graphics.set_color (Graphics.rgb 0 0 0)
 
 let drawBigGrid (grid:tbigGrid) = 
 	let rec drawCase g x y=
@@ -72,28 +92,30 @@ let rec getSmallGrid (grid:tbigGrid) n = match (n, grid) with
 	|(m, t::q) when m > 1 -> getSmallGrid q (m -1)
 	|(_,_) -> invalid_arg "Probleme 1"
 
-let winSmallGrid grid = match grid with
-	|{content = []; _} -> invalid_arg "Probleme 6"
-	|{content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); _} when t1 = t2 && t1 = t3 -> {content = (t1::t2::t3::t4::t5::t6::t7::t8::t9::[]); status = t1}
-	|{content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); _} when t4 = t5 && t4 = t6 -> {content = (t1::t2::t3::t4::t5::t6::t7::t8::t9::[]); status = t4}
-	|{content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); _} when t7 = t8 && t7 = t9 -> {content = (t1::t2::t3::t4::t5::t6::t7::t8::t9::[]); status = t7}
-	|{content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); _} when t1 = t4 && t1 = t7 -> {content = (t1::t2::t3::t4::t5::t6::t7::t8::t9::[]); status = t1}
-	|{content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); _} when t2 = t5 && t2 = t8 -> {content = (t1::t2::t3::t4::t5::t6::t7::t8::t9::[]); status = t2}
-	|{content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); _} when t3 = t6 && t3 = t9 -> {content = (t1::t2::t3::t4::t5::t6::t7::t8::t9::[]); status = t3}
-	|{content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); _} when t1 = t5 && t1 = t9 -> {content = (t1::t2::t3::t4::t5::t6::t7::t8::t9::[]); status = t1}
-	|{content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); _} when t3 = t5 && t3 = t7 -> {content = (t1::t2::t3::t4::t5::t6::t7::t8::t9::[]); status = t3}
+
+let winSmallGrid grid = 
+	match grid with
+	|{content = []; _} -> invalid_arg "Probleme 6 liste vide"
+	|{content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); _} when t1 = t2 && t1 = t3 && t1 <> U -> {content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); status = t1}
+	|{content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); _} when t4 = t5 && t4 = t6 && t4 <> U -> {content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); status = t4}
+	|{content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); _} when t7 = t8 && t7 = t9 && t7 <> U -> {content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); status = t7}
+	|{content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); _} when t1 = t4 && t1 = t7 && t1 <> U -> {content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); status = t1}
+	|{content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); _} when t2 = t5 && t2 = t8 && t2 <> U -> {content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); status = t2}
+	|{content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); _} when t3 = t6 && t3 = t9 && t3 <> U -> {content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); status = t3}
+	|{content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); _} when t1 = t5 && t1 = t9 && t1 <> U -> {content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); status = t1}
+	|{content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); _} when t3 = t5 && t3 = t7 && t3 <> U -> {content = (t1::t2::t3::t4::t5::t6::t7::t8::[t9]); status = t3}
 	|_ -> grid
 
 let winBigGrid grid = match grid with
 	|[] -> invalid_arg "Probleme 2"
-	|_ when (getSmallGrid grid 1).status = (getSmallGrid grid 2).status && (getSmallGrid grid 1).status = (getSmallGrid grid 3).status -> (getSmallGrid grid 1).status
-	|_ when (getSmallGrid grid 1).status = (getSmallGrid grid 4).status && (getSmallGrid grid 1).status = (getSmallGrid grid 7).status -> (getSmallGrid grid 1).status
-	|_ when (getSmallGrid grid 1).status = (getSmallGrid grid 5).status && (getSmallGrid grid 1).status = (getSmallGrid grid 9).status -> (getSmallGrid grid 1).status
-	|_ when (getSmallGrid grid 4).status = (getSmallGrid grid 5).status && (getSmallGrid grid 4).status = (getSmallGrid grid 6).status -> (getSmallGrid grid 4).status
-	|_ when (getSmallGrid grid 7).status = (getSmallGrid grid 8).status && (getSmallGrid grid 7).status = (getSmallGrid grid 9).status -> (getSmallGrid grid 7).status
-	|_ when (getSmallGrid grid 3).status = (getSmallGrid grid 6).status && (getSmallGrid grid 3).status = (getSmallGrid grid 9).status -> (getSmallGrid grid 3).status
-	|_ when (getSmallGrid grid 2).status = (getSmallGrid grid 5).status && (getSmallGrid grid 2).status = (getSmallGrid grid 8).status -> (getSmallGrid grid 2).status
-	|_ when (getSmallGrid grid 3).status = (getSmallGrid grid 5).status && (getSmallGrid grid 3).status = (getSmallGrid grid 7).status -> (getSmallGrid grid 3).status
+	|_ when (getSmallGrid grid 1).status = (getSmallGrid grid 2).status && (getSmallGrid grid 1).status = (getSmallGrid grid 3).status && U <> (getSmallGrid grid 1).status -> (getSmallGrid grid 1).status
+	|_ when (getSmallGrid grid 1).status = (getSmallGrid grid 4).status && (getSmallGrid grid 1).status = (getSmallGrid grid 7).status && U <> (getSmallGrid grid 1).status -> (getSmallGrid grid 1).status
+	|_ when (getSmallGrid grid 1).status = (getSmallGrid grid 5).status && (getSmallGrid grid 1).status = (getSmallGrid grid 9).status && U <> (getSmallGrid grid 1).status -> (getSmallGrid grid 1).status
+	|_ when (getSmallGrid grid 4).status = (getSmallGrid grid 5).status && (getSmallGrid grid 4).status = (getSmallGrid grid 6).status && U <> (getSmallGrid grid 4).status -> (getSmallGrid grid 4).status
+	|_ when (getSmallGrid grid 7).status = (getSmallGrid grid 8).status && (getSmallGrid grid 7).status = (getSmallGrid grid 9).status && U <> (getSmallGrid grid 7).status -> (getSmallGrid grid 7).status
+	|_ when (getSmallGrid grid 3).status = (getSmallGrid grid 6).status && (getSmallGrid grid 3).status = (getSmallGrid grid 9).status && U <> (getSmallGrid grid 9).status -> (getSmallGrid grid 3).status
+	|_ when (getSmallGrid grid 2).status = (getSmallGrid grid 5).status && (getSmallGrid grid 2).status = (getSmallGrid grid 8).status && U <> (getSmallGrid grid 8).status -> (getSmallGrid grid 2).status
+	|_ when (getSmallGrid grid 3).status = (getSmallGrid grid 5).status && (getSmallGrid grid 3).status = (getSmallGrid grid 7).status && U <> (getSmallGrid grid 7).status -> (getSmallGrid grid 3).status
 	|_ when (getSmallGrid grid 1).status != U && (getSmallGrid grid 2).status != U && (getSmallGrid grid 3).status != U && (getSmallGrid grid 4).status != U && (getSmallGrid grid 5).status != U && (getSmallGrid grid 6).status != U && (getSmallGrid grid 7).status != U && (getSmallGrid grid 8).status != U && (getSmallGrid grid 9).status != U -> Q
 	|_ -> U
 
@@ -104,14 +126,13 @@ let rec modifSmallGrid grid n (v:tcontent) bol =
 		|(_, []) -> invalid_arg "Probleme 3"
 		|(1, t::q) when (cellIsFull {content = v::q; status = grid.status}) && (bol) -> {content = v::q; status = v}
 		|(1, t::q) -> {content = v::q; status = grid.status}
-		|(m, t::q) when m > 1 -> add t (modifSmallGrid {content = q; status = grid.status} (m -1) v (t <> U))
+		|(m, t::q) when m > 1 -> add t (modifSmallGrid {content = q; status = grid.status} (m - 1) v (t <> U))
 		|(_, _) -> invalid_arg "Probleme 3"
 
 let rec modifBigGrid grid n m (v:tcontent) = match (grid, n) with
 	|([], _) -> invalid_arg "Probleme 4"
-	|(t::q, 1) -> let save = winSmallGrid (modifSmallGrid t m v true) in
-			save :: q 
-	|(t::q, l) when l > 1 -> t::(modifBigGrid q (l -1) m v)
+	|(t::q, 1) -> (winSmallGrid (modifSmallGrid t m v true)) :: q 
+	|(t::q, l) when l > 1 -> t::(modifBigGrid q (l - 1) m v)
 	| _ -> invalid_arg "Probleme 4"
 
 let is_digit c = c >= '1' && c <= '9'
@@ -171,14 +192,16 @@ else
 	end
 	
 
-let getInfoPlayer symbol=
-	print_endline ("Please enter the name for player" ^ toString symbol);
-	{name = String.trim (read_line ()); symbol =symbol}
+let getInfoPlayer sym=
+	print_endline ("Please enter the name for player " ^ toStringB sym);
+	match sym with
+	| D ->	{name = String.trim ("\x1B[34m"^read_line ()^"\x1B[0m"); symbol = D}
+	| _ -> {name = String.trim ("\x1B[31m"^read_line ()^"\x1B[0m"); symbol = T}
 
 let rec launchGame playerA playerB grid=
 	let (a, b) = getMove playerA grid in
 	let cur_grid = modifBigGrid grid a b playerA.symbol in
-	if winBigGrid cur_grid <> U then
+	if winBigGrid cur_grid = U then
 	begin
 		drawBigGrid cur_grid;
 		winBigGrid cur_grid
@@ -212,4 +235,8 @@ let rec main ?(r=false) () =
 	| _ -> ()
 
 
-let () = main ()
+let () = match Sys.argv with
+	|y when Array.length y = 1 -> main ()
+	|y when (y.(1)) = "-r" -> main ~r:true ()
+	|_-> print_endline "Bad argument, launch in normal mode";
+		main ()

@@ -5,9 +5,9 @@
 NAME = tic-tac-toe
 
 # srcs
-SOURCES = *.mli \
-		  *.ml \
-		  
+SOURCES = grid.mli \
+		  grid.ml
+
 # Compiler
 CAMLC = ocamlc
 CAMLOPT = ocamlopt
