@@ -201,7 +201,7 @@ let getInfoPlayer sym=
 let rec launchGame playerA playerB grid=
 	let (a, b) = getMove playerA grid in
 	let cur_grid = modifBigGrid grid a b playerA.symbol in
-	if winBigGrid cur_grid = U then
+	if winBigGrid cur_grid <> U then
 	begin
 		drawBigGrid cur_grid;
 		winBigGrid cur_grid
