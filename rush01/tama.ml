@@ -97,7 +97,6 @@ let draw_button () =
 	Graphics.moveto 212 18;
 	Graphics.draw_string "KILL"
 
-
 let suffixe_tmp = ".tmp "
 and rm = 
   if Sys.os_type="Unix" then
@@ -180,10 +179,12 @@ let draw_fill truc x y = match truc with
 					Graphics.fill_rect x y (n / 2) 10;
 					Graphics.set_color Graphics.white;
 					Graphics.fill_rect (x + n / 2) y (100 - n / 2) 10
-	| n ->Graphics.set_color Graphics.green;
+	| n when n < 98 ->Graphics.set_color Graphics.green;
 			Graphics.fill_rect x y (n / 2) 10;
 			Graphics.set_color Graphics.white;
 			Graphics.fill_rect (x + n / 2) y (100 - n / 2) 10
+	| _ -> Graphics.set_color Graphics.green;
+			Graphics.fill_rect x y 50 10
 
 let draw_status he e hy ha =
 	draw_fill he 35 250;
@@ -206,9 +207,13 @@ let draw_status he e hy ha =
 	Graphics.draw_string "HAPPY"
 
 let draw_endgame str =
-	Graphics.clear_graph ();
+	Graphics.auto_synchronize true;
+	Graphics.set_color Graphics.white;
+	Graphics.fill_rect 0 250 300 50;
+	Graphics.fill_rect 0 0 300 50;
 	draw_tama "kill_pika.png";
 	Graphics.moveto 1 75;
+	Graphics.set_color Graphics.black;
 	Graphics.set_font "-*-fixed-medium-r-semicondensed--15-*-*-*-*-*-iso8859-1";
 	Graphics.draw_string str;
 	Graphics.draw_rect 50 200 200 50;
@@ -236,7 +241,7 @@ let print_stat (x:Tama.gochi) =
 	| (s, he, e, hy, ha) ->	print_endline ("Tama: ( " ^ s ^ ", " ^ string_of_int he ^ ", " ^ string_of_int e ^ ", " ^ string_of_int he ^ ", " ^ string_of_int ha ^ " )")
 
 let rec loop (t:Tama.gochi) (time:int) =
-
+	draw_game t;
 	let bla = (Graphics.wait_next_event [Graphics.Button_down; Graphics.Poll]) in
 	if bla.Graphics.button = false && (int_of_float (Unix.time ()) - time >= 1) && Tama.is_dead t = false then 
 				begin
@@ -247,14 +252,14 @@ let rec loop (t:Tama.gochi) (time:int) =
 	else
 		let status = (Graphics.wait_next_event [Graphics.Button_up]) in 
 		match (status.Graphics.mouse_x, status.Graphics.mouse_y) with
-		|(x, y) when x >= 55 && x <= 95 && y >= 10 && y <= 40 && Tama.is_dead t = false -> draw_game (Tama.eat t);Unix.sleep 1;loop (Tama.eat t) (int_of_float (Unix.time ()))
-		|(x, y) when x >= 105 && x <= 145 && y >= 10 && y <= 40 && Tama.is_dead t = false -> draw_game (Tama.bath t); Unix.sleep 1;loop (Tama.bath t) (int_of_float (Unix.time ()))
-		|(x, y) when x >= 155 && x <= 195 && y >= 10 && y <= 40 && Tama.is_dead t = false -> draw_game (Tama.thunder t); Unix.sleep 1;loop (Tama.thunder t) (int_of_float (Unix.time ()))
-		|(x, y) when x >= 205 && x <= 245 && y >= 10 && y <= 40 && Tama.is_dead t = false -> draw_game (Tama.kill t); Unix.sleep 1;loop (Tama.kill t) (int_of_float (Unix.time ()))
+		|(x, y) when x >= 55 && x <= 95 && y >= 10 && y <= 40 && Tama.is_dead t = false -> Graphics.sound 1000 1000;draw_tama "eat1_pika.png"; draw_tama "eat1_pika.png";draw_tama "eat1_pika.png";draw_tama "eat1_pika.png";draw_tama "eat1_pika.png"; draw_tama "eat1_pika.png"; draw_tama "eat1_pika.png";draw_tama "eat1_pika.png";draw_tama "eat1_pika.png";draw_tama "eat1_pika.png"; loop (Tama.eat t) (int_of_float (Unix.time ()))
+		|(x, y) when x >= 105 && x <= 145 && y >= 10 && y <= 40 && Tama.is_dead t = false ->Graphics.sound 1000 1000;draw_tama "bath1_pika.png"; draw_tama "bath1_pika.png"; draw_tama "bath1_pika.png"; draw_tama "bath1_pika.png"; draw_tama "bath1_pika.png"; draw_tama "bath1_pika.png"; draw_tama "bath1_pika.png"; draw_tama "bath1_pika.png"; draw_tama "bath1_pika.png"; draw_tama "bath1_pika.png"; loop (Tama.bath t) (int_of_float (Unix.time ()))
+		|(x, y) when x >= 155 && x <= 195 && y >= 10 && y <= 40 && Tama.is_dead t = false ->Graphics.sound 1000 1000;draw_tama "thunder2_pika.png"; draw_tama "thunder2_pika.png"; draw_tama "thunder2_pika.png"; draw_tama "thunder2_pika.png"; draw_tama "thunder2_pika.png"; draw_tama "thunder2_pika.png"; draw_tama "thunder2_pika.png"; draw_tama "thunder2_pika.png"; draw_tama "thunder2_pika.png"; draw_tama "thunder2_pika.png"; loop (Tama.thunder t) (int_of_float (Unix.time ()))
+		|(x, y) when x >= 205 && x <= 245 && y >= 10 && y <= 40 && Tama.is_dead t = false ->Graphics.sound 1000 1000;draw_tama "kill1_pika.png"; draw_tama "kill1_pika.png"; draw_tama "kill1_pika.png"; draw_tama "kill1_pika.png"; draw_tama "kill1_pika.png";draw_tama "kill1_pika.png"; draw_tama "kill1_pika.png"; draw_tama "kill1_pika.png"; draw_tama "kill1_pika.png"; draw_tama "kill1_pika.png";loop (Tama.kill t) (int_of_float (Unix.time ()))
 		|(x, y) when x >= 50 && x <=250 && y >= 200 && y <=250 && Tama.is_dead t -> Graphics.clear_graph (); draw_game ("newborn", 100, 100, 100, 100); loop ("newborn", 100, 100, 100, 100) (int_of_float (Unix.time ()))
 		|_ -> 	if ((int_of_float (Unix.time ()) - time >= 1)) && Tama.is_dead t = false then 
 				begin
-					draw_game (Tama.live t (int_of_float (Unix.time ()) - time)); loop (Tama.live t (int_of_float (Unix.time ()) - time)) (int_of_float (Unix.time ()))
+					loop (Tama.live t (int_of_float (Unix.time ()) - time)) (int_of_float (Unix.time ()))
 				end
 			else
 				loop t time
@@ -262,7 +267,7 @@ let rec loop (t:Tama.gochi) (time:int) =
 let () =
 try
 	Graphics.open_graph " 300x300";
-	draw_game (Tama.load ());
+	Graphics.auto_synchronize true;
 	loop (Tama.load ()) (int_of_float (Unix.time ()))
 with
 | _ -> print_endline "Thanks for using our Tamagochi."
